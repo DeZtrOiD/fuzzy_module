@@ -64,9 +64,9 @@ def plot_fuzzy_sets(
         max_right = fs.alpha_levels[-1][2]
 
         for alpha, left, right in fs.alpha_levels:
-            if abs(left) > abs(max_left) and not isinf(left):
+            if left < max_left and not isinf(left):
                 max_left = left
-            if abs(right) > abs(max_right) and not isinf(right):
+            if right > max_right and not isinf(right):
                 max_right = right
             left_x.append(left)
             left_y.append(alpha)
@@ -162,12 +162,12 @@ def plot_fuzzy_sets_3d(
         max_right = fs.alpha_levels[-1][2]
 
         for alpha, left, right in fs.alpha_levels:
-            if abs(left) > abs(max_left) and not isinf(left):
+            if left < max_left and not isinf(left):
                 max_left = left
-            if abs(right) > abs(max_right) and not isinf(right):
+            if right > max_right and not isinf(right):
                 max_right = right
-            if isinf(left) or isinf(right):
-                continue
+            # if isinf(left) or isinf(right):
+            #     continue
             xs.append(left)
             ys.append(right)
             zs.append(alpha)
