@@ -177,12 +177,6 @@ class ConvexFuzzySet:
 
         return left, right
 
-    @staticmethod
-    def _supps_has_zero(a: tuple[float, float], b: tuple[float, float]) -> bool:
-        if a[0] <= 0 and a[1] >= 0 or b[0] <= 0 and b[1] >= 0:
-            return True
-        return False
-
     # -------------------------------------------------------------------------
     # Algebraic operations
     # -------------------------------------------------------------------------
@@ -266,7 +260,7 @@ class ConvexFuzzySet:
         return result
 
     def __truediv__(self, other: ConvexFuzzySet) -> ConvexFuzzySet:
-        if ConvexFuzzySet._supps_has_zero(self._support, other._support):
+        if other._support[0] <= 0 and other._support[1] >= 0:
             raise ValueError("Support includes 0. The operation is undefined.")
         result = ConvexFuzzySet.__new__(ConvexFuzzySet)
         result._max_alpha = min(self._max_alpha, other._max_alpha)

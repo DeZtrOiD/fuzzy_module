@@ -121,7 +121,8 @@ def plot_fuzzy_sets_3d(
     cmap_name: str = "tab10",
     linewidth: float = 1.5,
     alpha_line: float = 0.85,
-    infinity_coef: float = 1.5
+    infinity_coef: float = 1.5,
+    min_alpha: float = 0
 ) -> Axes:
     """
     3D-coordinates (L(α), R(α), α).
@@ -154,9 +155,10 @@ def plot_fuzzy_sets_3d(
         zs: List[float] = []  # α
 
         sup_l, sup_r = fs.support
-        xs.append(sup_l)
-        ys.append(sup_r)
-        zs.append(0.0)
+        if min_alpha <= 0:
+            xs.append(sup_l)
+            ys.append(sup_r)
+            zs.append(0.0)
 
         max_left = fs.alpha_levels[-1][1]
         max_right = fs.alpha_levels[-1][2]
@@ -168,9 +170,10 @@ def plot_fuzzy_sets_3d(
                 max_right = right
             # if isinf(left) or isinf(right):
             #     continue
-            xs.append(left)
-            ys.append(right)
-            zs.append(alpha)
+            if alpha >= min_alpha:
+                xs.append(left)
+                ys.append(right)
+                zs.append(alpha)
 
         if max_left > 0:
             max_left /= infinity_coef
