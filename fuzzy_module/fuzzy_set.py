@@ -127,7 +127,7 @@ class ConvexFuzzySet:
     # -------------------------------------------------------------------------
 
     @classmethod
-    def _getResampledAlphaCuts(
+    def _get_resampled_alpha_cuts(
             cls, a: ConvexFuzzySet, b: ConvexFuzzySet, max_alpha
             ) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float, float]]]:
 
@@ -192,7 +192,7 @@ class ConvexFuzzySet:
         result._support = (self._support[0] + other._support[0], self._support[1] + other._support[1])
         result._defuzzified = None
 
-        result._alpha_levels, resampled_b = ConvexFuzzySet._getResampledAlphaCuts(
+        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(
             self, other, result._max_alpha
         )
 
@@ -220,7 +220,7 @@ class ConvexFuzzySet:
             raise ValueError(f'Incorrect support ({left_a}, {right_a})')
         result._support = (min(left_a, right_a), max(left_a, right_a))
 
-        result._alpha_levels, resampled_b = ConvexFuzzySet._getResampledAlphaCuts(
+        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(
             self, other, result._max_alpha
         )
         for i in range(len(resampled_b)):
@@ -251,7 +251,7 @@ class ConvexFuzzySet:
             raise ValueError(f'Incorrect support ({left_a}, {right_a})')
         result._support = (min(left_a, right_a), max(left_a, right_a))
 
-        (result._alpha_levels, resampled_b) = ConvexFuzzySet._getResampledAlphaCuts(self, other, result._max_alpha)
+        (result._alpha_levels, resampled_b) = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
         for i in range(len(resampled_b)):
             left = result._alpha_levels[i][1] * resampled_b[i][1]
             right = result._alpha_levels[i][2] * resampled_b[i][2]
@@ -280,7 +280,7 @@ class ConvexFuzzySet:
 
         result._support = (left_a, right_a)
 
-        (result._alpha_levels, resampled_b) = ConvexFuzzySet._getResampledAlphaCuts(self, other, result._max_alpha)
+        (result._alpha_levels, resampled_b) = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
         for i in range(len(resampled_b)):
             left = min(
                 result._alpha_levels[i][1] / resampled_b[i][1], result._alpha_levels[i][2] / resampled_b[i][1],
@@ -366,7 +366,7 @@ class ConvexFuzzySet:
         L2*(a, b) + penalty*|a.max_alpha - b.max_alpha|.
         """
         max_alpha = min(a._max_alpha, b._max_alpha)
-        a_resampled, b_resampled = ConvexFuzzySet._getResampledAlphaCuts(a, b, max_alpha)
+        a_resampled, b_resampled = ConvexFuzzySet._get_resampled_alpha_cuts(a, b, max_alpha)
 
         distance_sq = 0.0
         for (_, l_a, r_a), (_, l_b, r_b) in zip(a_resampled, b_resampled):
