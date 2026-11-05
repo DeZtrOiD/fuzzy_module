@@ -6,8 +6,7 @@ from .fuzzy_set import ConvexFuzzySet
 def create_fuzzy_exp(
         exp_lambda: float = 1.0, shift: float = 0.0, max_alpha: float = 1.0,
         min_alpha: float = 0.01, num_levels: int = 10,
-        normalization_exp: bool = True, normalization_set: bool = True,
-        reversed: bool = False) -> ConvexFuzzySet:
+        normalization: bool = True, reversed: bool = False) -> ConvexFuzzySet:
 
     if min_alpha <= 0:
         min_alpha = 0.01
@@ -31,18 +30,22 @@ def create_fuzzy_exp(
     alpha_levels: List[Tuple[float, float, float]] = []
     coef = 1.0
     max_level = 1.0
-    if not normalization_exp:
-        # ln(a / lamb): a > lamb -> err
-        if max_level > exp_lambda:
-            max_level = exp_lambda
-        if min_alpha > exp_lambda:
-            min_alpha = min(exp_lambda, max_level) / 1.5
-        coef = 1.0 / exp_lambda
+    # if not normalization_exp:
+    # ln(a / lamb): a > lamb -> err
+    if max_level > exp_lambda:
+        max_level = exp_lambda
+    if min_alpha > exp_lambda:
+        min_alpha = min(exp_lambda, max_level) / 1.5
+    coef = 1.0 / exp_lambda
 
     for i in range(num_levels):
         alpha = min_alpha + (max_level - min_alpha) * i / (num_levels - 1)
         # alpha = lamb * exp(-lamb * (x - shift)) => x = shift - ln(alpha/lamb)/lamb
-        alpha_levels.append((alpha, shift, shift - log(alpha * coef) / exp_lambda))
+        right = shift - log(alpha * coef) / exp_lambda
+        left = shift
+        if right < left:
+            right = left
+        alpha_levels.append((alpha, left, right))
 
     support = (shift, float('inf'))
     if reversed:
@@ -50,4 +53,4 @@ def create_fuzzy_exp(
         for i in range(num_levels):
             alpha_levels[i] = (alpha_levels[i][0], -alpha_levels[i][2], -alpha_levels[i][1])
 
-    return ConvexFuzzySet(alpha_levels, support, max_alpha, normalization_set)
+    return ConvexFuzzySet(alpha_levels, support, max_alpha, normalization)

@@ -5,15 +5,13 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.metrics import silhouette_score
 from sklearn_extra.cluster import KMedoids
-# from validclust import dunn
 
 
 def generate_fuzzy_epxs(num_objects: int) -> List[ConvexFuzzySet]:
     exp_lambda = np.random.uniform(0.1, 5.0, size=num_objects)
     shift = np.random.uniform(-10.0, 10.0, size=num_objects)
     num_levels = np.random.randint(5, 51, size=num_objects)
-    normalization_exp = np.random.choice([0, 1], size=num_objects)
-    normalization_set = np.random.choice([0, 1], size=num_objects)
+    normalization = np.random.choice([0, 1], size=num_objects)
     reversed = np.random.choice([0, 1], size=num_objects)
 
     a1 = np.random.uniform(0.01, 1.0, size=num_objects)
@@ -34,8 +32,7 @@ def generate_fuzzy_epxs(num_objects: int) -> List[ConvexFuzzySet]:
             max_alpha[i],
             min_alpha[i],
             num_levels[i],
-            normalization_exp[i],
-            normalization_set[i],
+            normalization[i],
             reversed[i]
         ))
 

@@ -1,4 +1,9 @@
-# Universe is Real numbers
+# #=#=#=#=#=#=#=#=#-DeZtrOidDeV-#=#=#=#=#=#=#=#=#
+# Author: DeZtrOid
+# Date: 2026
+# Desc: Convex fuzzy set defined on the set of real numbers (universe of discourse)
+# Based on Zadeh's Extension Principle and Nguyen's Theorem
+# #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 
 from typing import List, Tuple
 from bisect import insort, bisect_left

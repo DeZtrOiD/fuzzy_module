@@ -128,6 +128,7 @@ def plot_fuzzy_sets_3d(
     3D-coordinates (L(α), R(α), α).
     Args:
         labels: list of cluster labels (one per set, in the same order)
+        min_alpha: cuts off everything below this level
     Returns:
         Axes on which the plot is built
     """
@@ -163,17 +164,23 @@ def plot_fuzzy_sets_3d(
         max_left = fs.alpha_levels[-1][1]
         max_right = fs.alpha_levels[-1][2]
 
-        for alpha, left, right in fs.alpha_levels:
-            if left < max_left and not isinf(left):
-                max_left = left
-            if right > max_right and not isinf(right):
-                max_right = right
-            # if isinf(left) or isinf(right):
-            #     continue
+        for alpha, left, right in reversed(fs.alpha_levels):
             if alpha >= min_alpha:
+                if left < max_left and not isinf(left):
+                    max_left = left
+                if right > max_right and not isinf(right):
+                    max_right = right
                 xs.append(left)
                 ys.append(right)
                 zs.append(alpha)
+            else:
+                break
+
+        if min_alpha > 0 and len(xs) != 0:
+            left, right = fs._interpolate(min_alpha)
+            xs.append(left)
+            ys.append(right)
+            zs.append(min_alpha)
 
         if max_left > 0:
             max_left /= infinity_coef
