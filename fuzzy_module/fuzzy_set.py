@@ -25,9 +25,7 @@ class ConvexFuzzySet:
         Args:
             alpha_levels: [(alpha, left, right)]
         """
-
-        if max_alpha > 1.0:
-            max_alpha = 1.0
+        max_alpha = min(max_alpha, 1.0)
         if max_alpha <= 0:
             raise ValueError('Empty set is not supported')
 

@@ -8,12 +8,9 @@ def create_fuzzy_exp(
         min_alpha: float = 0.01, num_levels: int = 10,
         normalization: bool = True, reversed: bool = False) -> ConvexFuzzySet:
 
-    if min_alpha <= 0:
-        min_alpha = 0.01
-    if max_alpha > 1.0:
-        max_alpha = 1.0
-    if exp_lambda <= 0.0:
-        exp_lambda = 1.0
+    min_alpha = max(0.01, min_alpha)
+    max_alpha = min(max_alpha, 1.0)
+    exp_lambda = min(exp_lambda, 1.0)
     if num_levels <= 0:
         num_levels = 10
     if isinf(shift):
