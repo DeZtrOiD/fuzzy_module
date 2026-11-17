@@ -1,16 +1,21 @@
-from .fuzzy_set import ConvexFuzzySet
+from .clustering import (
+    cluster_by_count,
+    cluster_by_criterion,
+    generate_fuzzy_epxs,
+)
+from .file_io import load_from_file, save_to_file
 from .fuzzy_num import create_fuzzy_exp
-from .file_io import save_to_file, load_from_file
+from .fuzzy_set import ConvexFuzzySet
 from .graphics import plot_fuzzy_sets, plot_fuzzy_sets_3d
-from .clasterization import generate_fuzzy_epxs, cluster_by_count, cluster_by_criterion
 
 __all__ = [
-    'ConvexFuzzySet',
-    'create_fuzzy_exp',
-    'save_to_file', 'load_from_file',
-    'plot_fuzzy_sets',
-    'generate_fuzzy_epxs',
-    'cluster_by_count',
-    'cluster_by_criterion'
-    'plot_fuzzy_sets_3d'
+    "ConvexFuzzySet",
+    "cluster_by_count",
+    "cluster_by_criterion",
+    "create_fuzzy_exp",
+    "generate_fuzzy_epxs",
+    "load_from_file",
+    "plot_fuzzy_sets",
+    "plot_fuzzy_sets_3d",
+    "save_to_file",
 ]
