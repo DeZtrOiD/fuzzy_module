@@ -1,23 +1,24 @@
+from math import isinf
+
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from typing import List, Optional
-from .fuzzy_set import ConvexFuzzySet
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.lines import Line2D
-from math import isinf
+from mpl_toolkits.mplot3d import Axes3D
+
+from .fuzzy_set import ConvexFuzzySet
 
 
 def plot_fuzzy_sets(
-    fuzzy_sets: List[ConvexFuzzySet],
-    ax: Optional[Axes] = None,
-    labels: Optional[List[str]] = None,
-    colors: Optional[List[str]] | Optional[List[tuple[float, float, float, float]]] = None,
+    fuzzy_sets: list[ConvexFuzzySet],
+    ax: Axes | None = None,
+    labels: list[str] | None = None,
+    colors: list[str] | list[tuple[float, float, float, float]] | None = None,
     show_alpha_lines: bool = True,
     fill_alpha: float = 0.2,
     title: str = "Fuzzy sets >_<",
     xlabel: str = "x",
     ylabel: str = "μ(x)",
-    infinity_coef: float = 1.5
+    infinity_coef: float = 1.5,
 ) -> Axes:
     """
     Args:
@@ -99,13 +100,13 @@ def plot_fuzzy_sets(
 
         if show_alpha_lines:
             for alpha, left, right in fs.alpha_levels:
-                ax.plot([left, right], [alpha, alpha], color=color, linestyle='--', alpha=0.3, linewidth=0.5)
+                ax.plot([left, right], [alpha, alpha], color=color, linestyle="--", alpha=0.3, linewidth=0.5)
 
-    ax.set_title(title, fontsize=14, fontweight='bold')
+    ax.set_title(title, fontsize=14, fontweight="bold")
     ax.set_xlabel(xlabel, fontsize=12)
     ax.set_ylabel(ylabel, fontsize=12)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc='best')
+    ax.legend(loc="best")
 
     max_alpha = max(fs.max_alpha for fs in fuzzy_sets)
     ax.set_ylim(0, max_alpha * 1.05)
@@ -114,15 +115,15 @@ def plot_fuzzy_sets(
 
 
 def plot_fuzzy_sets_3d(
-    fuzzy_sets: List['ConvexFuzzySet'],
-    labels: List[int],
-    ax: Optional[Axes3D] = None,
+    fuzzy_sets: list["ConvexFuzzySet"],
+    labels: list[int],
+    ax: Axes3D | None = None,
     title: str = "Fuzzy sets in 3D (L, R, α)",
     cmap_name: str = "tab10",
     linewidth: float = 1.5,
     alpha_line: float = 0.85,
     infinity_coef: float = 1.5,
-    min_alpha: float = 0
+    min_alpha: float = 0,
 ) -> Axes:
     """
     3D-coordinates (L(α), R(α), α).
@@ -134,7 +135,7 @@ def plot_fuzzy_sets_3d(
     """
     if ax is None:
         fig = plt.figure(figsize=(10, 8))
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
 
     unique_labels = sorted(set(labels))
     n_clusters = len(unique_labels)
@@ -143,17 +144,14 @@ def plot_fuzzy_sets_3d(
     if n_clusters == 1:
         label_to_color = {unique_labels[0]: cmap(0.5)}
     else:
-        label_to_color = {
-            lbl: cmap(i / (n_clusters - 1))
-            for i, lbl in enumerate(unique_labels)
-        }
+        label_to_color = {lbl: cmap(i / (n_clusters - 1)) for i, lbl in enumerate(unique_labels)}
 
     for fs, lbl in zip(fuzzy_sets, labels):
         color = label_to_color[lbl]
 
-        xs: List[float] = []  # L(α)
-        ys: List[float] = []  # R(α)
-        zs: List[float] = []  # α
+        xs: list[float] = []  # L(α)
+        ys: list[float] = []  # R(α)
+        zs: list[float] = []  # α
 
         sup_l, sup_r = fs.support
         if min_alpha <= 0:
@@ -199,15 +197,14 @@ def plot_fuzzy_sets_3d(
 
         ax.plot(xs, ys, zs, color=color, linewidth=linewidth, alpha=alpha_line)
 
-    ax.set_xlabel('L(α) — Left bound')
-    ax.set_ylabel('R(α) — Right bound')
-    ax.set_zlabel('α')
+    ax.set_xlabel("L(α) — Left bound")
+    ax.set_ylabel("R(α) — Right bound")
+    ax.set_zlabel("α")
     ax.set_title(title)
 
     legend_elements = [
-        Line2D([0], [0], color=label_to_color[lbl], lw=2.5, label=f'Cluster {lbl}')
-        for lbl in unique_labels
+        Line2D([0], [0], color=label_to_color[lbl], lw=2.5, label=f"Cluster {lbl}") for lbl in unique_labels
     ]
-    ax.legend(handles=legend_elements, loc='best')
+    ax.legend(handles=legend_elements, loc="best")
 
     return ax

@@ -1,12 +1,17 @@
-from math import log, isinf
-from typing import List, Tuple
+from math import isinf, log
+
 from .fuzzy_set import ConvexFuzzySet
 
 
 def create_fuzzy_exp(
-        exp_lambda: float = 1.0, shift: float = 0.0, max_alpha: float = 1.0,
-        min_alpha: float = 0.01, num_levels: int = 10,
-        normalization: bool = True, reversed: bool = False) -> ConvexFuzzySet:
+    exp_lambda: float = 1.0,
+    shift: float = 0.0,
+    max_alpha: float = 1.0,
+    min_alpha: float = 0.01,
+    num_levels: int = 10,
+    normalization: bool = True,
+    reversed: bool = False,
+) -> ConvexFuzzySet:
 
     min_alpha = max(0.01, min_alpha)
     max_alpha = min(max_alpha, 1.0)
@@ -16,21 +21,20 @@ def create_fuzzy_exp(
     if isinf(shift):
         raise ValueError('"shift" must be finite.')
     if isinf(exp_lambda):
-        raise ValueError('exp_lambda must be finite.')
+        raise ValueError("exp_lambda must be finite.")
     if max_alpha <= 0.0:
-        raise ValueError('max_alpha is invalid')
+        raise ValueError("max_alpha is invalid")
     if not (min_alpha < max_alpha):
-        raise ValueError('min_alpha is invalid')
+        raise ValueError("min_alpha is invalid")
     if isinf(num_levels):
-        raise ValueError('num_levels must be finite.')
+        raise ValueError("num_levels must be finite.")
 
-    alpha_levels: List[Tuple[float, float, float]] = []
+    alpha_levels: list[tuple[float, float, float]] = []
     coef = 1.0
     max_level = 1.0
     # if not normalization_exp:
     # ln(a / lamb): a > lamb -> err
-    if max_level > exp_lambda:
-        max_level = exp_lambda
+    max_level = min(max_alpha, exp_lambda)
     if min_alpha > exp_lambda:
         min_alpha = min(exp_lambda, max_level) / 1.5
     coef = 1.0 / exp_lambda
@@ -40,11 +44,10 @@ def create_fuzzy_exp(
         # alpha = lamb * exp(-lamb * (x - shift)) => x = shift - ln(alpha/lamb)/lamb
         right = shift - log(alpha * coef) / exp_lambda
         left = shift
-        if right < left:
-            right = left
+        right = max(left, right)
         alpha_levels.append((alpha, left, right))
 
-    support = (shift, float('inf'))
+    support = (shift, float("inf"))
     if reversed:
         support = (-support[1], -support[0])
         for i in range(num_levels):

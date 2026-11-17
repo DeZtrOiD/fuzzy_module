@@ -5,40 +5,44 @@
 # Based on Zadeh's Extension Principle and Nguyen's Theorem
 # #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 
-from typing import List, Tuple
-from bisect import insort, bisect_left
-from math import isnan, isclose
+from bisect import bisect_left, insort
 from copy import deepcopy
+from math import isclose, isnan
+from typing import Self
 
 
 class ConvexFuzzySet:
     _STR_PRECISION: int = 6
     _ALPHA_LEVEL_EPS: float = 1e-10
     _METRIC_PENALTY: float = 1e-1
-    '''penalty_weight'''
+    """penalty_weight"""
     _DISTANCE_INFL: float = 1e50
 
     def __init__(
-            self, alpha_levels: List[Tuple[float, float, float]], support: Tuple[float, float],
-            max_alpha: float = 1.0, normalization: bool = True):
+        self,
+        alpha_levels: list[tuple[float, float, float]],
+        support: tuple[float, float],
+        max_alpha: float = 1.0,
+        normalization: bool = True,
+    ):
         """
         Args:
             alpha_levels: [(alpha, left, right)]
         """
         max_alpha = min(max_alpha, 1.0)
         if max_alpha <= 0:
-            raise ValueError('Empty set is not supported')
+            raise ValueError("Empty set is not supported")
 
         if support[0] >= support[1]:
             raise ValueError("Incorrect support.")
         self._support = support
         self._defuzzified: float | None = None
-        self._alpha_levels: List[Tuple[float, float, float]] = []
-        '''(alpha, left, right)'''
+        self._alpha_levels: list[tuple[float, float, float]] = []
+        """(alpha, left, right)"""
 
         max_level = max(alpha_levels, key=lambda x: x[0])[0]
         if isclose(max_level, 0.0, rel_tol=self._ALPHA_LEVEL_EPS):
-            raise ValueError('Empty set is not supported')
+            raise ValueError("Empty set is not supported")
 
         if max_level < max_alpha and not normalization:
             max_alpha = max_level
@@ -62,23 +66,23 @@ class ConvexFuzzySet:
                     right = alpha_levels[0][2]
                 insort(self._alpha_levels, (self._max_alpha, left, right), key=lambda x: x[0])
             else:
-                raise ValueError('Empty set is not supported')
+                raise ValueError("Empty set is not supported")
 
         # Validate the nestedness and consistency of the alpha-cuts family
-        last_left = float('inf')
-        last_right = float('-inf')
+        last_left = float("inf")
+        last_right = float("-inf")
         for _, left, right in self._alpha_levels:
             if left > last_left or right < last_right:
                 raise ValueError(f"Incorrect alpha-cuts indexed family ({last_left, last_right}) < ({left, right}).")
             if left > right:
                 raise ValueError(f"Incorrect alpha-cuts indexed family. Left({left}) > right({right}).")
-        if self._alpha_levels[0][1] == float('inf') or self._alpha_levels[0][2] == float('-inf'):
+        if self._alpha_levels[0][1] == float("inf") or self._alpha_levels[0][2] == float("-inf"):
             raise ValueError(f"Incorrect alpha-cuts indexed family. Left == Right == {self._alpha_levels[-1][2]}.")
         if self._alpha_levels[0][1] < self._support[0] or self._alpha_levels[0][2] > self._support[1]:
             raise ValueError("Incorrect alpha-cuts indexed family. The support is smaller than a-cuts.")
 
     def _defuzzify(self) -> float:
-        '''Weighted Average Method'''
+        """Weighted Average Method"""
         weighted_sum = 0.0
         alpha_sum = 0.0
 
@@ -116,33 +120,37 @@ class ConvexFuzzySet:
 
     @distance_infinity.setter
     def distance_infinity(self, value: float):
-        if not (0 < value < float('inf')):
+        if not (0 < value < float("inf")):
             raise ValueError("Distance infinity must be 0 < value < inf")
         self._DISTANCE_INFL = value
+
+    @property
+    def alpha_level_eps(self):
+        return self._ALPHA_LEVEL_EPS
 
     # -------------------------------------------------------------------------
     # Helpers for algebraic operations
     # -------------------------------------------------------------------------
 
-    @classmethod
+    @staticmethod
     def _get_resampled_alpha_cuts(
-            cls, a: ConvexFuzzySet, b: ConvexFuzzySet, max_alpha
-            ) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float, float]]]:
+        a: "ConvexFuzzySet", b: "ConvexFuzzySet", max_alpha: float
+    ) -> tuple[list[tuple[float, float, float]], list[tuple[float, float, float]]]:
 
-        alphas_a = [level[0] for level in a._alpha_levels if level[0] <= max_alpha]
-        alphas_b = [level[0] for level in b._alpha_levels if level[0] <= max_alpha]
+        alphas_a = [level[0] for level in a.alpha_levels if level[0] <= max_alpha]
+        alphas_b = [level[0] for level in b.alpha_levels if level[0] <= max_alpha]
         common_alphas = sorted(set(alphas_a + alphas_b))
 
-        if common_alphas and abs(common_alphas[-1] - max_alpha) > cls._ALPHA_LEVEL_EPS:
-            max_alpha_a = a._alpha_levels[-1][0] if a._alpha_levels else 0
-            max_alpha_b = b._alpha_levels[-1][0] if b._alpha_levels else 0
+        if common_alphas and abs(common_alphas[-1] - max_alpha) > a.alpha_level_eps:
+            max_alpha_a = a.alpha_levels[-1][0] if a.alpha_levels else 0
+            max_alpha_b = b.alpha_levels[-1][0] if b.alpha_levels else 0
 
             if max_alpha <= max(max_alpha_a, max_alpha_b):
                 common_alphas.append(max_alpha)
                 common_alphas.sort()
 
-        resampled_a: List[Tuple[float, float, float]] = []
-        resampled_b: List[Tuple[float, float, float]] = []
+        resampled_a: list[tuple[float, float, float]] = []
+        resampled_b: list[tuple[float, float, float]] = []
 
         for alpha in common_alphas:
             left_a, right_a = a._interpolate(alpha)
@@ -153,7 +161,7 @@ class ConvexFuzzySet:
 
         return resampled_a, resampled_b
 
-    def _interpolate(self, target_alpha: float) -> Tuple[float, float]:
+    def _interpolate(self, target_alpha: float) -> tuple[float, float]:
         al = self._alpha_levels
         if not al:
             raise ValueError("Cannot interpolate from empty alpha_levels")
@@ -184,27 +192,25 @@ class ConvexFuzzySet:
     # Algebraic operations
     # -------------------------------------------------------------------------
 
-    def __add__(self, other: ConvexFuzzySet) -> ConvexFuzzySet:
-        result = ConvexFuzzySet.__new__(ConvexFuzzySet)
+    def __add__(self, other: Self) -> Self:
+        result = type(self).__new__(type(self))
         result._max_alpha = min(self._max_alpha, other._max_alpha)
         result._support = (self._support[0] + other._support[0], self._support[1] + other._support[1])
         result._defuzzified = None
 
-        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(
-            self, other, result._max_alpha
-        )
+        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
 
         for i in range(len(resampled_b)):
             result._alpha_levels[i] = (
                 result._alpha_levels[i][0],
                 result._alpha_levels[i][1] + resampled_b[i][1],
-                result._alpha_levels[i][2] + resampled_b[i][2]
+                result._alpha_levels[i][2] + resampled_b[i][2],
             )
 
         return result
 
-    def __sub__(self, other: ConvexFuzzySet) -> ConvexFuzzySet:
-        result = ConvexFuzzySet.__new__(ConvexFuzzySet)
+    def __sub__(self, other: Self) -> Self:
+        result = type(self).__new__(type(self))
         result._max_alpha = min(self._max_alpha, other._max_alpha)
         result._defuzzified = None
 
@@ -213,25 +219,19 @@ class ConvexFuzzySet:
         left_a -= left_b
         right_a -= right_b
         if isnan(left_a) or isnan(right_a):
-            raise ValueError('An indeterminate operation involving infinity.')
-        if left_a == float('inf'):
-            raise ValueError(f'Incorrect support ({left_a}, {right_a})')
+            raise ValueError("An indeterminate operation involving infinity.")
+        if left_a == float("inf"):
+            raise ValueError(f"Incorrect support ({left_a}, {right_a})")
         result._support = (min(left_a, right_a), max(left_a, right_a))
 
-        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(
-            self, other, result._max_alpha
-        )
+        result._alpha_levels, resampled_b = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
         for i in range(len(resampled_b)):
             left = result._alpha_levels[i][1] - resampled_b[i][1]
             right = result._alpha_levels[i][2] - resampled_b[i][2]
-            result._alpha_levels[i] = (
-                result._alpha_levels[i][0],
-                min(left, right),
-                max(left, right)
-            )
+            result._alpha_levels[i] = (result._alpha_levels[i][0], min(left, right), max(left, right))
         return result
 
-    def __mul__(self, other: ConvexFuzzySet) -> ConvexFuzzySet:
+    def __mul__(self, other: Self) -> Self:
         # if 2 intervals from the same set contain 'inf',
         # and the 2 corresponding intervals from the other set lie on opposite sides of 0,
         # then the graph will have a break
@@ -244,9 +244,9 @@ class ConvexFuzzySet:
         left_a *= left_b
         right_a *= right_b
         if isnan(left_a) or isnan(right_a):
-            raise ValueError('An indeterminate operation involving infinity and zero.')
+            raise ValueError("An indeterminate operation involving infinity and zero.")
         if left_a == right_a:
-            raise ValueError(f'Incorrect support ({left_a}, {right_a})')
+            raise ValueError(f"Incorrect support ({left_a}, {right_a})")
         result._support = (min(left_a, right_a), max(left_a, right_a))
 
         (result._alpha_levels, resampled_b) = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
@@ -255,14 +255,10 @@ class ConvexFuzzySet:
             right = result._alpha_levels[i][2] * resampled_b[i][2]
             if isnan(left) or isnan(right):
                 raise ValueError("alpha-cuts includes 0 and inf. The operation is undefined.")
-            result._alpha_levels[i] = (
-                result._alpha_levels[i][0],
-                min(left, right),
-                max(left, right)
-            )
+            result._alpha_levels[i] = (result._alpha_levels[i][0], min(left, right), max(left, right))
         return result
 
-    def __truediv__(self, other: ConvexFuzzySet) -> ConvexFuzzySet:
+    def __truediv__(self, other: Self) -> Self:
         if other._support[0] <= 0 and other._support[1] >= 0:
             raise ValueError("Support includes 0. The operation is undefined.")
         result = ConvexFuzzySet.__new__(ConvexFuzzySet)
@@ -274,19 +270,23 @@ class ConvexFuzzySet:
         left_a = min(left_a / left_b, right_a / left_b, left_a / right_b, right_a / right_b)
         right_a = max(left_a / left_b, right_a / left_b, left_a / right_b, right_a / right_b)
         if isnan(left_a) and isnan(right_a):
-            raise ValueError('0 or inf in divisor')
+            raise ValueError("0 or inf in divisor")
 
         result._support = (left_a, right_a)
 
         (result._alpha_levels, resampled_b) = ConvexFuzzySet._get_resampled_alpha_cuts(self, other, result._max_alpha)
         for i in range(len(resampled_b)):
             left = min(
-                result._alpha_levels[i][1] / resampled_b[i][1], result._alpha_levels[i][2] / resampled_b[i][1],
-                result._alpha_levels[i][1] / resampled_b[i][2], result._alpha_levels[i][2] / resampled_b[i][2]
+                result._alpha_levels[i][1] / resampled_b[i][1],
+                result._alpha_levels[i][2] / resampled_b[i][1],
+                result._alpha_levels[i][1] / resampled_b[i][2],
+                result._alpha_levels[i][2] / resampled_b[i][2],
             )
             right = max(
-                result._alpha_levels[i][1] / resampled_b[i][1], result._alpha_levels[i][2] / resampled_b[i][1],
-                result._alpha_levels[i][1] / resampled_b[i][2], result._alpha_levels[i][2] / resampled_b[i][2]
+                result._alpha_levels[i][1] / resampled_b[i][1],
+                result._alpha_levels[i][2] / resampled_b[i][1],
+                result._alpha_levels[i][1] / resampled_b[i][2],
+                result._alpha_levels[i][2] / resampled_b[i][2],
             )
             result._alpha_levels[i] = (result._alpha_levels[i][0], left, right)
         return result
@@ -300,10 +300,11 @@ class ConvexFuzzySet:
             result._alpha_levels[i] = (
                 result._alpha_levels[i][0],
                 -result._alpha_levels[i][2],
-                -result._alpha_levels[i][1]
+                -result._alpha_levels[i][1],
             )
         result._support = (-result._support[1], -result._support[0])
         return result
+
     # -------------------------------------------------------------------------
     # Comparison via defuzzification (Center of Gravity)
     # -------------------------------------------------------------------------
@@ -313,16 +314,27 @@ class ConvexFuzzySet:
             self._defuzzified = self._defuzzify()
         return self._defuzzified
 
-    def __lt__(self, other): return self.defuzzify() < other.defuzzify()
-    def __le__(self, other): return self.defuzzify() <= other.defuzzify()
-    def __gt__(self, other): return self.defuzzify() > other.defuzzify()
-    def __ge__(self, other): return self.defuzzify() >= other.defuzzify()
-    def __eq__(self, other): return isclose(self.defuzzify(), other.defuzzify())
+    def __lt__(self, other: Self):
+        return self.defuzzify() < other.defuzzify()
+
+    def __le__(self, other: Self):
+        return self.defuzzify() <= other.defuzzify()
+
+    def __gt__(self, other: Self):
+        return self.defuzzify() > other.defuzzify()
+
+    def __ge__(self, other: Self):
+        return self.defuzzify() >= other.defuzzify()
+
+    def __eq__(self, other):
+        if not isinstance(other, ConvexFuzzySet):
+            return NotImplemented
+        return isclose(self.defuzzify(), other.defuzzify())
 
     # -------------------------------------------------------------------------
     # -------------------------------------------------------------------------
 
-    def get_alpha_level(self, alpha_level: float) -> Tuple[float, float] | None:
+    def get_alpha_level(self, alpha_level: float) -> tuple[float, float] | None:
         if self._max_alpha < alpha_level or alpha_level < 0:
             return None
         if isclose(alpha_level, 0.0, abs_tol=self._ALPHA_LEVEL_EPS):
@@ -359,11 +371,11 @@ class ConvexFuzzySet:
         return "\n".join(lines)
 
     @staticmethod
-    def distance(a: ConvexFuzzySet, b: ConvexFuzzySet) -> float:
+    def distance(a: "ConvexFuzzySet", b: "ConvexFuzzySet") -> float:
         """
         L2*(a, b) + penalty*|a.max_alpha - b.max_alpha|.
         """
-        max_alpha = min(a._max_alpha, b._max_alpha)
+        max_alpha = min(a.max_alpha, b.max_alpha)
         a_resampled, b_resampled = ConvexFuzzySet._get_resampled_alpha_cuts(a, b, max_alpha)
 
         distance_sq = 0.0
@@ -374,11 +386,11 @@ class ConvexFuzzySet:
             right = r_a - r_b
             if isnan(right):
                 right = 0
-            distance_sq += (left)**2 + (right)**2
+            distance_sq += (left) ** 2 + (right) ** 2
         distance = distance_sq**0.5
 
-        penalty = ConvexFuzzySet._METRIC_PENALTY * abs(a._max_alpha - b._max_alpha)
+        penalty = ConvexFuzzySet._METRIC_PENALTY * abs(a.max_alpha - b.max_alpha)
         result = distance + penalty
-        if result == float('inf'):
+        if result == float("inf"):
             result = ConvexFuzzySet._DISTANCE_INFL
         return result

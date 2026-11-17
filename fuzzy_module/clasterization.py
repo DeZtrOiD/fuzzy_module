@@ -1,13 +1,12 @@
-
-from .fuzzy_num import create_fuzzy_exp
-from .fuzzy_set import ConvexFuzzySet
-from typing import List, Tuple
 import numpy as np
 from sklearn.metrics import silhouette_score
 from sklearn_extra.cluster import KMedoids
 
+from .fuzzy_num import create_fuzzy_exp
+from .fuzzy_set import ConvexFuzzySet
 
-def generate_fuzzy_epxs(num_objects: int) -> List[ConvexFuzzySet]:
+
+def generate_fuzzy_epxs(num_objects: int) -> list[ConvexFuzzySet]:
     exp_lambda = np.random.uniform(0.1, 5.0, size=num_objects)
     shift = np.random.uniform(-10.0, 10.0, size=num_objects)
     num_levels = np.random.randint(5, 51, size=num_objects)
@@ -20,26 +19,22 @@ def generate_fuzzy_epxs(num_objects: int) -> List[ConvexFuzzySet]:
     min_alpha = np.minimum(a1, a2)
     max_alpha = np.maximum(a1, a2)
 
-    same_mask = (min_alpha == max_alpha)
+    same_mask = min_alpha == max_alpha
     max_alpha[same_mask] = np.minimum(1.0, max_alpha[same_mask] + 0.05)
     min_alpha[same_mask] = np.maximum(0.01, min_alpha[same_mask] - 0.05)
 
-    fuzzy_array: List[ConvexFuzzySet] = []
+    fuzzy_array: list[ConvexFuzzySet] = []
     for i in range(num_objects):
-        fuzzy_array.append(create_fuzzy_exp(
-            exp_lambda[i],
-            shift[i],
-            max_alpha[i],
-            min_alpha[i],
-            num_levels[i],
-            normalization[i],
-            reversed[i]
-        ))
+        fuzzy_array.append(
+            create_fuzzy_exp(
+                exp_lambda[i], shift[i], max_alpha[i], min_alpha[i], num_levels[i], normalization[i], reversed[i]
+            )
+        )
 
     return fuzzy_array
 
 
-def build_distance_matrix(fuzzy_sets: List[ConvexFuzzySet]) -> np.ndarray:
+def build_distance_matrix(fuzzy_sets: list[ConvexFuzzySet]) -> np.ndarray:
     n = len(fuzzy_sets)
     distance_matrix = np.zeros((n, n))
 
@@ -52,17 +47,18 @@ def build_distance_matrix(fuzzy_sets: List[ConvexFuzzySet]) -> np.ndarray:
     return distance_matrix
 
 
-def cluster_by_count(fuzzy_sets: List[ConvexFuzzySet], k: int) -> List[int]:
+def cluster_by_count(fuzzy_sets: list[ConvexFuzzySet], k: int) -> list[int]:
     distance_matrix = build_distance_matrix(fuzzy_sets)
 
-    kmedoids = KMedoids(n_clusters=k, metric='precomputed', random_state=42)
+    kmedoids = KMedoids(n_clusters=k, metric="precomputed", random_state=42)
     labels = kmedoids.fit_predict(distance_matrix)
 
     return labels.tolist()
 
 
-def cluster_by_criterion(fuzzy_sets: List[ConvexFuzzySet], max_k: int = 10,
-                         criterion: str = "silhouette") -> Tuple[List[int], int]:
+def cluster_by_criterion(
+    fuzzy_sets: list[ConvexFuzzySet], max_k: int = 10, criterion: str = "silhouette"
+) -> tuple[list[int], int]:
 
     distance_matrix = build_distance_matrix(fuzzy_sets)
     n_samples = len(fuzzy_sets)
@@ -77,10 +73,10 @@ def cluster_by_criterion(fuzzy_sets: List[ConvexFuzzySet], max_k: int = 10,
     upper_bound = min(max_k + 1, n_samples)
 
     for k in range(2, upper_bound):
-        kmedoids = KMedoids(n_clusters=k, metric='precomputed', random_state=42)
+        kmedoids = KMedoids(n_clusters=k, metric="precomputed", random_state=42)
         labels = kmedoids.fit_predict(distance_matrix)
 
-        score = silhouette_score(distance_matrix, labels, metric='precomputed')
+        score = silhouette_score(distance_matrix, labels, metric="precomputed")
 
         if score > best_score:
             best_score = score

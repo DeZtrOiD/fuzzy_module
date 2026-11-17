@@ -1,4 +1,5 @@
 import pickle
+
 from .fuzzy_set import ConvexFuzzySet
 
 
